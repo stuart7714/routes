@@ -7,6 +7,8 @@ The user is shown a hex map which is a grid of hexagons representing a 2-D plane
 
 The user may also click on hexes to fill them in and create barriers which the route must pass around.
 
+A user may turn on a debug mode to view information (the "f=g+h" values for A*) overlaid over the hexes.
+
 # Code Structure
 
 The route finding algorithm is [A*](https://en.wikipedia.org/wiki/A*_search_algorithm).

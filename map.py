@@ -18,6 +18,7 @@ class Map:
     # Create the hex map
     def __init__(self, canvas):
         self.canvas = canvas
+        self.debug = False
         # The start and end hexes for a potential route through the hex map
         self.start_hex = None
         self.end_hex = None
@@ -27,7 +28,7 @@ class Map:
             for q in range(-HEX_RANGE, HEX_RANGE + 1):
                 axial_coord = (q + -(r // 2), r)
                 self.hexes[axial_coord] = Hex(
-                    canvas, axial_coord, self.on_start, self.on_end, self.on_clear, self.on_barrier)
+                    canvas, axial_coord, self.on_start, self.on_end, self.on_clear, self.on_debug, self.on_barrier)
 
     # Calculate the route through the hex map
     def update_route(self):
@@ -35,6 +36,7 @@ class Map:
         for hex in self.hexes.values():
             if hex.state == HexState.EMPTY:
                 hex.set_colour_from_state()
+            hex.set_text("")
         # Calculate the route and indicate it on the hex map
         if self.start_hex and self.end_hex:
             route = self.a_star()
@@ -75,6 +77,12 @@ class Map:
             self.end_hex = None
             self.update_route()
 
+    # Callback when debug visualisation is toggled
+    def on_debug(self):
+        self.debug = not self.debug
+        for hex in self.hexes.values():
+            hex.show_text(self.debug)
+
     # The distance between two hexes with the given axial coordinates
     def hex_distance(self, a, b):
         q1, r1 = a
@@ -83,7 +91,7 @@ class Map:
             abs(q1 - q2)
             + abs(r1 - r2)
             + abs((q1 + r1) - (q2 + r2))
-        )
+        ) // 2
 
     # Estimated cost from the given hex to the end hex
     def compute_h(self, hex):
@@ -130,9 +138,12 @@ class Map:
         g[self.start_hex] = 0
 
         # The h value of a hex is the cost from the hex to the end
+        h = {}
+        h[self.start_hex] = self.compute_h(self.start_hex)
+
         # The f value for a hex is the sum of g and h
         f = {}
-        f[self.start_hex] = self.compute_h(self.start_hex)
+        f[self.start_hex] = h[self.start_hex]
 
         while open_set:
             # Get the hex with the best value of f
@@ -140,6 +151,9 @@ class Map:
 
             # Check to see if we have reached the end
             if current == self.end_hex:
+                for hex in self.hexes.values():
+                    if hex in f and hex in g and hex in h:
+                        hex.set_text(f"{f[hex]}={g[hex]}+{h[hex]}")
                 return self.reconstruct_route(current, came_from)
 
             # We have finished examining the current hex
@@ -166,6 +180,7 @@ class Map:
                 # Update the f = g + h values for the hex
                 came_from[neighbour] = current
                 g[neighbour] = tentative_g
-                f[neighbour] = g[neighbour] + self.compute_h(neighbour)
+                h[neighbour] = self.compute_h(neighbour)
+                f[neighbour] = g[neighbour] + h[neighbour]
 
         return []

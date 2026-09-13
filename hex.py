@@ -18,15 +18,19 @@ class HexState(Enum):
 # The user can interact with the hex to add barriers and to find a route
 class Hex:
     # Create the hex
-    def __init__(self, canvas, axial_coord, on_start, on_end, on_clear, on_barrier):
+    def __init__(self, canvas, axial_coord, on_start, on_end, on_clear, on_debug, on_barrier):
         self.canvas = canvas
         self.axial_coord = axial_coord
         self.on_start = on_start
         self.on_end = on_end
         self.on_clear = on_clear
+        self.on_debug = on_debug
         self.on_barrier = on_barrier
         self.cartesian_coord = self.axial_to_cartesian()
+        q, r = axial_coord
+        self.tag = f"hex_{q}_{r}"
         self.create_polygon()
+        self.create_text()
         self.create_events()
         self.set_state(HexState.EMPTY)
 
@@ -70,8 +74,26 @@ class Hex:
     def create_polygon(self):
         self.polygon = self.canvas.create_polygon(
             self.hex_points(),
-            outline="black"
+            outline="black",
+            tags=self.tag
         )
+
+    # Create a text overlay for the hex
+    def create_text(self):
+        x, y = self.cartesian_coord
+        self.text = self.canvas.create_text(
+            x, y, tags=self.tag, state="hidden")
+
+    # Set the text to be shown on the overlay
+    def set_text(self, text):
+        self.canvas.itemconfig(self.text, text=text)
+
+    # Set whether to show the text overlay
+    def show_text(self, show_text):
+        if show_text:
+            self.canvas.itemconfig(self.text, state="normal")
+        else:
+            self.canvas.itemconfig(self.text, state="hidden")
 
     # The user has clicked on a hex
     def on_clicked(self, event):
@@ -88,10 +110,11 @@ class Hex:
         menu.add_command(label="Start", command=lambda: self.on_start(self))
         menu.add_command(label="End", command=lambda: self.on_end(self))
         menu.add_command(label="Clear", command=lambda: self.on_clear(self))
+        menu.add_command(label="Debug", command=lambda: self.on_debug())
         menu.tk_popup(event.x_root, event.y_root)
 
     # The user can click on a hex to add or remove a barrier
     # The user can right click on a hex to set or clear start and end hexes
     def create_events(self):
-        self.canvas.tag_bind(self.polygon, "<Button-1>", self.on_clicked)
-        self.canvas.tag_bind(self.polygon, "<Button-3>", self.on_menu)
+        self.canvas.tag_bind(self.tag, "<Button-1>", self.on_clicked)
+        self.canvas.tag_bind(self.tag, "<Button-3>", self.on_menu)
