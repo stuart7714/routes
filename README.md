@@ -1,5 +1,9 @@
 # routes
-An A* route finder in Python for programming practice
+An A* route finder in Python for programming practice.
+
+Click on the short video to watch:
+
+[![Watch the video](https://img.youtube.com/vi/84ju6jeFejM/maxresdefault.jpg)](https://youtu.be/84ju6jeFejM)
 
 # Overview
 
